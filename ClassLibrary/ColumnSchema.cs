@@ -1,26 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+#nullable disable
+namespace ClassLibrary;
 
-namespace ClassLibrary
+/// <summary>
+/// Contains the schema of a single DB column.
+/// </summary>
+public class ColumnSchema
 {
-    /// <summary>
-    /// Contains the schema of a single DB column.
-    /// </summary>
-    public class ColumnSchema
-    {
-        public string ColumnName;
+    public string ColumnName;
 
-        public string ColumnType;
+    public string ColumnType;
 
-        public int Length;
+    public int Length;
 
-        public bool IsNullable;
+    public bool IsNullable;
 
-        public string DefaultValue;
+    public string DefaultValue;
 
-        public bool IsIdentity;
+    public bool IsIdentity;
 
-        public bool? IsCaseSensitivite = null;
-    }
+    public bool? IsCaseSensitivite = null;
 }

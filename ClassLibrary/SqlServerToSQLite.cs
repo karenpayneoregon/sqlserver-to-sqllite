@@ -8,6 +8,7 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using System.IO;
 using log4net;
+#pragma warning disable CS8603 // Possible null reference return.
 
 namespace ClassLibrary
 {
@@ -292,7 +293,7 @@ namespace ClassLibrary
                     if (val is Guid)
                         return ((Guid)val).ToString();
                     if (val is string)
-                        return val.ToString();
+                        return val.ToString()!;
                     break;
 
                 case DbType.Guid:
@@ -585,12 +586,14 @@ namespace ClassLibrary
 
                 if (handler != null)
                 {
-                    ViewSchema updated = new ViewSchema();
-                    updated.ViewName = vs.ViewName;
-                    updated.ViewSQL = vs.ViewSQL;
+                    ViewSchema updated = new()
+                    {
+                        ViewName = vs.ViewName,
+                        ViewSQL = vs.ViewSQL
+                    };
 
                     // Ask the user to supply the new view definition SQL statement
-                    string sql = null;
+                    string sql = null!;
                     if (isSilent != true)
                     {
                          sql = handler(updated);
@@ -607,8 +610,10 @@ namespace ClassLibrary
                     }
                 }
                 else
+                {
                     throw;
-            } // catch
+                }
+            } 
         }
 
         /// <summary>
@@ -621,10 +626,8 @@ namespace ClassLibrary
             // Prepare a CREATE TABLE DDL statement
             string stmt = BuildCreateTableQuery(dt);
 
-            // _log.Info("\n\n" + stmt + "\n\n");
-
             // Execute the query in order to actually create the table.
-            SQLiteCommand cmd = new SQLiteCommand(stmt, conn);
+            SQLiteCommand cmd = new(stmt, conn);
             cmd.ExecuteNonQuery();
         }
 
@@ -636,7 +639,7 @@ namespace ClassLibrary
         /// <returns>CREATE TABLE DDL for the specified table.</returns>
         private static string BuildCreateTableQuery(TableSchema ts)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             sb.Append("CREATE TABLE [" + ts.TableName + "] (\n");
 
@@ -1302,7 +1305,7 @@ namespace ClassLibrary
         private static string AdjustDefaultValue(string val)
         {
             if (val == null || val == string.Empty)
-                return val;
+                return val!;
 
             Match m = _defaultValueRx.Match(val);
             if (m.Success)

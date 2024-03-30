@@ -1,21 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
+#nullable disable
 
-namespace ClassLibrary
+namespace ClassLibrary;
+
+public class TableSchema
 {
-    public class TableSchema
-    {
-        public string TableName;
+    public string TableName;
 
-        public string TableSchemaName;
+    public string TableSchemaName;
 
-        public List<ColumnSchema> Columns;
+    public List<ColumnSchema> Columns;
 
-        public List<string> PrimaryKey;
+    public List<string> PrimaryKey;
 
-    	public List<ForeignKeySchema> ForeignKeys;
+    public List<ForeignKeySchema> ForeignKeys;
 
-        public List<IndexSchema> Indexes;
-    }
+    public List<IndexSchema> Indexes;
 }

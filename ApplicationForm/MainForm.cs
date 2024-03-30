@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Data.SqlClient;
 using ClassLibrary;
+using MethodInvoker = System.Windows.Forms.MethodInvoker;
+#pragma warning disable IDE1006
 
 namespace ApplicationForm
 {
@@ -10,6 +12,24 @@ namespace ApplicationForm
         public MainForm()
         {
             InitializeComponent();
+
+            Shown += MainForm_Shown;
+        }
+
+        private void MainForm_Shown(object? sender, EventArgs e)
+        {
+            toolStripMenuItemSqlServer.Click += ToolStripMenuItemSqlServer_Click;
+            toolStripMenuItemLocal.Click += ToolStripMenuItemLocal_Click; ;
+        }
+
+        private void ToolStripMenuItemLocal_Click(object? sender, EventArgs e)
+        {
+            txtSqlAddress.Text = toolStripMenuItemLocal.Text;
+        }
+
+        private void ToolStripMenuItemSqlServer_Click(object? sender, EventArgs e)
+        {
+            txtSqlAddress.Text = toolStripMenuItemSqlServer.Text;
         }
         #endregion
 
@@ -37,12 +57,15 @@ namespace ApplicationForm
         {
             try
             {
-            	string constr;
-            	if (cbxIntegrated.Checked) {
-            		constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master");
-            	} else {
-            		constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master", txtUserDB.Text, txtPassDB.Text);
-            	}
+                string constr;
+                if (cbxIntegrated.Checked)
+                {
+                    constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master");
+                }
+                else
+                {
+                    constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master", txtUserDB.Text, txtPassDB.Text);
+                }
                 using (SqlConnection conn = new SqlConnection(constr))
                 {
                     conn.Open();
@@ -83,11 +106,11 @@ namespace ApplicationForm
         {
             UpdateSensitivity();
 
-            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string version = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
             this.Text = "SQL Server To SQLite DB Converter (" + version + ")";
         }
 
-		private void txtSqlAddress_TextChanged(object sender, EventArgs e)
+        private void txtSqlAddress_TextChanged(object sender, EventArgs e)
         {
             UpdateSensitivity();
         }
@@ -139,60 +162,59 @@ namespace ApplicationForm
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-        	string sqlConnString;
-        	if (cbxIntegrated.Checked) {
-        		sqlConnString = GetSqlServerConnectionString(txtSqlAddress.Text, (string)cboDatabases.SelectedItem);
-        	} else {
-        		sqlConnString = GetSqlServerConnectionString(txtSqlAddress.Text, (string)cboDatabases.SelectedItem, txtUserDB.Text, txtPassDB.Text);
-        	}
+            string sqlConnString;
+            sqlConnString = cbxIntegrated.Checked ? GetSqlServerConnectionString(txtSqlAddress.Text, 
+                cboDatabases.SelectedItem as string) : 
+                GetSqlServerConnectionString(txtSqlAddress.Text, 
+                    cboDatabases.SelectedItem as string, txtUserDB.Text, txtPassDB.Text);
+
             bool createViews = cbxCreateViews.Checked;
-        	
+
             string sqlitePath = txtSQLitePath.Text.Trim();
-            this.Cursor = Cursors.WaitCursor;
-            SqlConversionHandler handler = new SqlConversionHandler(delegate(bool done,
-                bool success, int percent, string msg) {
-                    Invoke(new MethodInvoker(delegate() {
+            Cursor = Cursors.WaitCursor;
+
+            SqlConversionHandler handler = new(delegate (bool done, bool success, int percent, string msg)
+            {
+                Invoke(new MethodInvoker(delegate ()
+                {
+                    UpdateSensitivity();
+                    lblMessage.Text = msg;
+                    pbrProgress.Value = percent;
+
+                    if (done)
+                    {
+                        btnStart.Enabled = true;
+                        Cursor = Cursors.Default;
                         UpdateSensitivity();
-                        lblMessage.Text = msg;
-                        pbrProgress.Value = percent;
 
-                        if (done)
+                        if (success)
                         {
-                            btnStart.Enabled = true;
-                            this.Cursor = Cursors.Default;
-                            UpdateSensitivity();
-
-                            if (success)
+                            MessageBox.Show(this, msg, "Conversion Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            pbrProgress.Value = 0;
+                            lblMessage.Text = string.Empty;
+                        }
+                        else
+                        {
+                            if (!_shouldExit)
                             {
                                 MessageBox.Show(this,
                                     msg,
-                                    "Conversion Finished",
+                                    "Conversion Failed",
                                     MessageBoxButtons.OK,
-                                    MessageBoxIcon.Information);
+                                    MessageBoxIcon.Error);
                                 pbrProgress.Value = 0;
                                 lblMessage.Text = string.Empty;
                             }
                             else
-                            {
-                                if (!_shouldExit)
-                                {
-                                    MessageBox.Show(this,
-                                        msg,
-                                        "Conversion Failed",
-                                        MessageBoxButtons.OK,
-                                        MessageBoxIcon.Error);
-                                    pbrProgress.Value = 0;
-                                    lblMessage.Text = string.Empty;
-                                }
-                                else
-                                    Application.Exit();
-                            }
+                                Application.Exit();
                         }
-                    }));
+                    }
+                }));
             });
-            SqlTableSelectionHandler selectionHandler = new SqlTableSelectionHandler(delegate(List<TableSchema> schema)
+
+            SqlTableSelectionHandler selectionHandler = new(delegate (List<TableSchema> schema)
             {
-                List<TableSchema> updated = null;
+                List<TableSchema> updated = null!;
                 Invoke(new MethodInvoker(delegate
                 {
                     // Allow the user to select which tables to include by showing him the 
@@ -200,32 +222,41 @@ namespace ApplicationForm
                     TableSelectionDialog dlg = new TableSelectionDialog();
                     DialogResult res = dlg.ShowTables(schema, this);
                     if (res == DialogResult.OK)
+                    {
                         updated = dlg.IncludedTables;
+                    }
                 }));
-                return updated;
+                return updated!;
             });
 
-            FailedViewDefinitionHandler viewFailureHandler = new FailedViewDefinitionHandler(delegate(ViewSchema vs)
+            FailedViewDefinitionHandler viewFailureHandler = new(delegate (ViewSchema vs)
             {
-                string updated = null;
+                string updated = null!;
                 Invoke(new MethodInvoker(delegate
                 {
                     ViewFailureDialog dlg = new ViewFailureDialog();
                     dlg.View = vs;
                     DialogResult res = dlg.ShowDialog(this);
                     if (res == DialogResult.OK)
+                    {
                         updated = dlg.ViewSQL;
+                    }
                     else
-                        updated = null;
+                    {
+                        updated = null!;
+                    }
                 }));
 
-                return updated;
+                return updated!;
             });
 
             string password = txtPassword.Text.Trim();
             if (!cbxEncrypt.Checked)
-                password = null;
-            SqlServerToSQLite.ConvertSqlServerToSQLiteDatabase(sqlConnString, sqlitePath, password, handler, 
+            {
+                password = null!;
+            }
+
+            SqlServerToSQLite.ConvertSqlServerToSQLiteDatabase(sqlConnString, sqlitePath, password, handler,
                 selectionHandler, viewFailureHandler, cbxTriggers.Checked, createViews, chkBox_treatGuidAsString.Checked, false);
         }
 
@@ -255,22 +286,24 @@ namespace ApplicationForm
             txtUserDB.Enabled = !SqlServerToSQLite.IsActive;
         }
 
-        private static string GetSqlServerConnectionString(string address, string db)
+        private static string GetSqlServerConnectionString(string address, string? db)
         {
             string res = @"Data Source=" + address.Trim() +
-                    ";Initial Catalog="+db.Trim()+";Integrated Security=SSPI;";
+                    ";Initial Catalog=" + db!.Trim() + ";Integrated Security=SSPI;";
             return res;
         }
-        private static string GetSqlServerConnectionString(string address, string db, string user, string pass)
+        private static string GetSqlServerConnectionString(string address, string? db, string user, string pass)
         {
             string res = @"Data Source=" + address.Trim() +
-            	";Initial Catalog="+db.Trim()+";User ID=" + user.Trim() + ";Password=" + pass.Trim();
+                ";Initial Catalog=" + db!.Trim() + ";User ID=" + user.Trim() + ";Password=" + pass.Trim();
             return res;
         }
         #endregion
 
         #region Private Variables
         private bool _shouldExit = false;
-        #endregion        
+        #endregion
+
+
     }
 }

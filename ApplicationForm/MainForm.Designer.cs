@@ -31,6 +31,9 @@ namespace ApplicationForm
             components = new System.ComponentModel.Container();
             label1 = new Label();
             txtSqlAddress = new TextBox();
+            contextMenuStrip1 = new ContextMenuStrip(components);
+            toolStripMenuItemSqlServer = new ToolStripMenuItem();
+            toolStripMenuItemLocal = new ToolStripMenuItem();
             label2 = new Label();
             txtSQLitePath = new TextBox();
             btnBrowseSQLitePath = new Button();
@@ -52,9 +55,7 @@ namespace ApplicationForm
             cbxTriggers = new CheckBox();
             cbxCreateViews = new CheckBox();
             chkBox_treatGuidAsString = new CheckBox();
-            contextMenuStrip1 = new ContextMenuStrip(components);
-            toolStripMenuItem1 = new ToolStripMenuItem();
-            toolStripMenuItem2 = new ToolStripMenuItem();
+            label4 = new Label();
             contextMenuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -70,6 +71,7 @@ namespace ApplicationForm
             // 
             // txtSqlAddress
             // 
+            txtSqlAddress.ContextMenuStrip = contextMenuStrip1;
             txtSqlAddress.Location = new Point(205, 26);
             txtSqlAddress.Margin = new Padding(4, 5, 4, 5);
             txtSqlAddress.Name = "txtSqlAddress";
@@ -78,10 +80,30 @@ namespace ApplicationForm
             txtSqlAddress.Text = ".\\SQLEXPRESS";
             txtSqlAddress.TextChanged += txtSqlAddress_TextChanged;
             // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.ImageScalingSize = new Size(20, 20);
+            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItemSqlServer, toolStripMenuItemLocal });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new Size(247, 52);
+            contextMenuStrip1.Text = "Select";
+            // 
+            // toolStripMenuItemSqlServer
+            // 
+            toolStripMenuItemSqlServer.Name = "toolStripMenuItemSqlServer";
+            toolStripMenuItemSqlServer.Size = new Size(246, 24);
+            toolStripMenuItemSqlServer.Text = ".\\SQLEXPRESS";
+            // 
+            // toolStripMenuItemLocal
+            // 
+            toolStripMenuItemLocal.Name = "toolStripMenuItemLocal";
+            toolStripMenuItemLocal.Size = new Size(246, 24);
+            toolStripMenuItemLocal.Text = "(localdb)\\MSSQLLocalDB";
+            // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(16, 155);
+            label2.Location = new Point(16, 182);
             label2.Margin = new Padding(4, 0, 4, 0);
             label2.Name = "label2";
             label2.Size = new Size(181, 20);
@@ -90,7 +112,7 @@ namespace ApplicationForm
             // 
             // txtSQLitePath
             // 
-            txtSQLitePath.Location = new Point(205, 151);
+            txtSQLitePath.Location = new Point(205, 178);
             txtSQLitePath.Margin = new Padding(4, 5, 4, 5);
             txtSQLitePath.Name = "txtSQLitePath";
             txtSQLitePath.Size = new Size(571, 27);
@@ -99,7 +121,7 @@ namespace ApplicationForm
             // 
             // btnBrowseSQLitePath
             // 
-            btnBrowseSQLitePath.Location = new Point(785, 148);
+            btnBrowseSQLitePath.Location = new Point(785, 175);
             btnBrowseSQLitePath.Margin = new Padding(4, 5, 4, 5);
             btnBrowseSQLitePath.Name = "btnBrowseSQLitePath";
             btnBrowseSQLitePath.Size = new Size(100, 35);
@@ -111,7 +133,7 @@ namespace ApplicationForm
             // btnStart
             // 
             btnStart.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnStart.Location = new Point(621, 331);
+            btnStart.Location = new Point(621, 445);
             btnStart.Margin = new Padding(4, 5, 4, 5);
             btnStart.Name = "btnStart";
             btnStart.Size = new Size(264, 35);
@@ -129,7 +151,7 @@ namespace ApplicationForm
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(16, 71);
+            label3.Location = new Point(16, 98);
             label3.Margin = new Padding(4, 0, 4, 0);
             label3.Name = "label3";
             label3.Size = new Size(76, 20);
@@ -141,7 +163,7 @@ namespace ApplicationForm
             cboDatabases.DropDownStyle = ComboBoxStyle.DropDownList;
             cboDatabases.Enabled = false;
             cboDatabases.FormattingEnabled = true;
-            cboDatabases.Location = new Point(205, 66);
+            cboDatabases.Location = new Point(205, 93);
             cboDatabases.Margin = new Padding(4, 5, 4, 5);
             cboDatabases.Name = "cboDatabases";
             cboDatabases.Size = new Size(571, 28);
@@ -162,7 +184,7 @@ namespace ApplicationForm
             // pbrProgress
             // 
             pbrProgress.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            pbrProgress.Location = new Point(16, 300);
+            pbrProgress.Location = new Point(16, 405);
             pbrProgress.Margin = new Padding(4, 5, 4, 5);
             pbrProgress.Name = "pbrProgress";
             pbrProgress.Size = new Size(869, 28);
@@ -171,7 +193,7 @@ namespace ApplicationForm
             // lblMessage
             // 
             lblMessage.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblMessage.Location = new Point(16, 272);
+            lblMessage.Location = new Point(16, 386);
             lblMessage.Margin = new Padding(4, 0, 4, 0);
             lblMessage.Name = "lblMessage";
             lblMessage.Size = new Size(705, 20);
@@ -181,7 +203,7 @@ namespace ApplicationForm
             // btnCancel
             // 
             btnCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnCancel.Location = new Point(486, 331);
+            btnCancel.Location = new Point(486, 445);
             btnCancel.Margin = new Padding(4, 5, 4, 5);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(127, 35);
@@ -193,7 +215,7 @@ namespace ApplicationForm
             // cbxEncrypt
             // 
             cbxEncrypt.AutoSize = true;
-            cbxEncrypt.Location = new Point(20, 195);
+            cbxEncrypt.Location = new Point(20, 222);
             cbxEncrypt.Margin = new Padding(4, 5, 4, 5);
             cbxEncrypt.Name = "cbxEncrypt";
             cbxEncrypt.Size = new Size(171, 24);
@@ -204,7 +226,7 @@ namespace ApplicationForm
             // 
             // txtPassword
             // 
-            txtPassword.Location = new Point(205, 192);
+            txtPassword.Location = new Point(205, 219);
             txtPassword.Margin = new Padding(4, 5, 4, 5);
             txtPassword.Name = "txtPassword";
             txtPassword.PasswordChar = '*';
@@ -216,7 +238,7 @@ namespace ApplicationForm
             // 
             cbxIntegrated.Checked = true;
             cbxIntegrated.CheckState = CheckState.Checked;
-            cbxIntegrated.Location = new Point(20, 109);
+            cbxIntegrated.Location = new Point(20, 136);
             cbxIntegrated.Margin = new Padding(4, 5, 4, 5);
             cbxIntegrated.Name = "cbxIntegrated";
             cbxIntegrated.Size = new Size(173, 32);
@@ -227,7 +249,7 @@ namespace ApplicationForm
             // 
             // txtUserDB
             // 
-            txtUserDB.Location = new Point(252, 109);
+            txtUserDB.Location = new Point(252, 136);
             txtUserDB.Margin = new Padding(4, 5, 4, 5);
             txtUserDB.Name = "txtUserDB";
             txtUserDB.Size = new Size(132, 27);
@@ -236,7 +258,7 @@ namespace ApplicationForm
             // 
             // txtPassDB
             // 
-            txtPassDB.Location = new Point(472, 109);
+            txtPassDB.Location = new Point(472, 136);
             txtPassDB.Margin = new Padding(4, 5, 4, 5);
             txtPassDB.Name = "txtPassDB";
             txtPassDB.PasswordChar = '*';
@@ -247,7 +269,7 @@ namespace ApplicationForm
             // lblUser
             // 
             lblUser.AutoSize = true;
-            lblUser.Location = new Point(201, 114);
+            lblUser.Location = new Point(201, 141);
             lblUser.Margin = new Padding(4, 0, 4, 0);
             lblUser.Name = "lblUser";
             lblUser.Size = new Size(41, 20);
@@ -258,7 +280,7 @@ namespace ApplicationForm
             // lblPassword
             // 
             lblPassword.AutoSize = true;
-            lblPassword.Location = new Point(393, 114);
+            lblPassword.Location = new Point(393, 141);
             lblPassword.Margin = new Padding(4, 0, 4, 0);
             lblPassword.Name = "lblPassword";
             lblPassword.Size = new Size(73, 20);
@@ -269,7 +291,7 @@ namespace ApplicationForm
             // cbxTriggers
             // 
             cbxTriggers.AutoSize = true;
-            cbxTriggers.Location = new Point(20, 232);
+            cbxTriggers.Location = new Point(20, 259);
             cbxTriggers.Margin = new Padding(4, 5, 4, 5);
             cbxTriggers.Name = "cbxTriggers";
             cbxTriggers.Size = new Size(280, 24);
@@ -280,7 +302,7 @@ namespace ApplicationForm
             // cbxCreateViews
             // 
             cbxCreateViews.AutoSize = true;
-            cbxCreateViews.Location = new Point(296, 232);
+            cbxCreateViews.Location = new Point(20, 293);
             cbxCreateViews.Margin = new Padding(4, 5, 4, 5);
             cbxCreateViews.Name = "cbxCreateViews";
             cbxCreateViews.Size = new Size(340, 24);
@@ -291,7 +313,7 @@ namespace ApplicationForm
             // chkBox_treatGuidAsString
             // 
             chkBox_treatGuidAsString.AutoSize = true;
-            chkBox_treatGuidAsString.Location = new Point(623, 232);
+            chkBox_treatGuidAsString.Location = new Point(20, 326);
             chkBox_treatGuidAsString.Margin = new Padding(4, 5, 4, 5);
             chkBox_treatGuidAsString.Name = "chkBox_treatGuidAsString";
             chkBox_treatGuidAsString.Size = new Size(166, 24);
@@ -299,31 +321,21 @@ namespace ApplicationForm
             chkBox_treatGuidAsString.Text = "Treat GUID As String";
             chkBox_treatGuidAsString.UseVisualStyleBackColor = true;
             // 
-            // contextMenuStrip1
+            // label4
             // 
-            contextMenuStrip1.ImageScalingSize = new Size(20, 20);
-            contextMenuStrip1.Items.AddRange(new ToolStripItem[] { toolStripMenuItem2, toolStripMenuItem1 });
-            contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new Size(247, 80);
-            contextMenuStrip1.Text = "Select";
-            // 
-            // toolStripMenuItem1
-            // 
-            toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new Size(246, 24);
-            toolStripMenuItem1.Text = "(localdb)\\MSSQLLocalDB";
-            // 
-            // toolStripMenuItem2
-            // 
-            toolStripMenuItem2.Name = "toolStripMenuItem2";
-            toolStripMenuItem2.Size = new Size(246, 24);
-            toolStripMenuItem2.Text = ".\\SQLEXPRESS";
+            label4.AutoSize = true;
+            label4.Location = new Point(205, 58);
+            label4.Name = "label4";
+            label4.Size = new Size(200, 20);
+            label4.TabIndex = 22;
+            label4.Text = "(Right click for server names)";
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(901, 372);
+            ClientSize = new Size(901, 486);
+            Controls.Add(label4);
             Controls.Add(chkBox_treatGuidAsString);
             Controls.Add(cbxCreateViews);
             Controls.Add(cbxTriggers);
@@ -350,6 +362,7 @@ namespace ApplicationForm
             Margin = new Padding(4, 5, 4, 5);
             MaximizeBox = false;
             Name = "MainForm";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "SQL Server To SQLite DB Converter";
             FormClosing += MainForm_FormClosing;
             Load += MainForm_Load;
@@ -385,8 +398,9 @@ namespace ApplicationForm
         private System.Windows.Forms.CheckBox cbxCreateViews;
         private System.Windows.Forms.CheckBox chkBox_treatGuidAsString;
         private ContextMenuStrip contextMenuStrip1;
-        private ToolStripMenuItem toolStripMenuItem2;
-        private ToolStripMenuItem toolStripMenuItem1;
+        private ToolStripMenuItem toolStripMenuItemSqlServer;
+        private ToolStripMenuItem toolStripMenuItemLocal;
+        private Label label4;
     }
 }
 

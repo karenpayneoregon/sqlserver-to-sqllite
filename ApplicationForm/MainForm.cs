@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Data.SqlClient;
 using ClassLibrary;
 using MethodInvoker = System.Windows.Forms.MethodInvoker;
-using System.Windows.Forms;
 using ApplicationForm.Classes;
 
 #pragma warning disable IDE1006
@@ -19,10 +18,16 @@ namespace ApplicationForm
             Shown += MainForm_Shown;
         }
 
+        /// <summary>
+        /// KP
+        /// </summary>
         private void MainForm_Shown(object? sender, EventArgs e)
         {
             toolStripMenuItemSqlServer.Click += ToolStripMenuItemSqlServer_Click;
             toolStripMenuItemLocal.Click += ToolStripMenuItemLocal_Click; ;
+            
+            txtSqlAddress.SelectionStart = txtSqlAddress.Text.Length;
+            txtSqlAddress.SelectionLength = 0;
         }
 
         private void ToolStripMenuItemLocal_Click(object? sender, EventArgs e)

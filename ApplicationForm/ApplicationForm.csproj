@@ -14,7 +14,8 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
+    <!--<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />-->
+	<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.4" />
   </ItemGroup>
 
   <ItemGroup>

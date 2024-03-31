@@ -74,7 +74,6 @@ namespace ApplicationForm
             // KP Auto set and database name
             if (!string.IsNullOrWhiteSpace(Utilities.DatabaseFolder()))
             {
-
                 txtSQLitePath.Text = Path.Combine(Utilities.DatabaseFolder(), $"{cboDatabases.Text}.db");
             }
 

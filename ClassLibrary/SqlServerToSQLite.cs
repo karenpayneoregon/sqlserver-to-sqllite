@@ -991,7 +991,13 @@ public class SqlServerToSQLite
         res.TableSchemaName = tschma;
         res.Columns = new List<ColumnSchema>();
 
-        SqlCommand cmd = new($@"SELECT COLUMN_NAME,COLUMN_DEFAULT,IS_NULLABLE,DATA_TYPE,  (columnproperty(object_id(TABLE_NAME), COLUMN_NAME, 'IsIdentity')) AS [IDENT], CHARACTER_MAXIMUM_LENGTH AS CSIZE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}' ORDER BY ORDINAL_POSITION ASC", conn);
+        SqlCommand cmd = new(
+            $"""
+             SELECT COLUMN_NAME,COLUMN_DEFAULT,IS_NULLABLE,DATA_TYPE,  (columnproperty(object_id(TABLE_NAME), COLUMN_NAME, 
+             'IsIdentity')) AS [IDENT], CHARACTER_MAXIMUM_LENGTH AS CSIZE FROM INFORMATION_SCHEMA.COLUMNS 
+             WHERE TABLE_NAME = '{tableName}' 
+             ORDER BY ORDINAL_POSITION ASC
+             """, conn);
 
         using (SqlDataReader reader = cmd.ExecuteReader())
         {
@@ -1006,13 +1012,16 @@ public class SqlServerToSQLite
                 string colName = (string)reader["COLUMN_NAME"];
 
                 tmp = reader["COLUMN_DEFAULT"];
+
                 string colDefault;
                 if (tmp is DBNull)
                 {
                     colDefault = string.Empty;
                 }
                 else
+                {
                     colDefault = (string)tmp;
+                }
 
                 tmp = reader["IS_NULLABLE"];
                 bool isNullable = ((string)tmp == "YES");
@@ -1033,8 +1042,10 @@ public class SqlServerToSQLite
                 // in the type name. For example - everything containing the string
                 // 'int' in its type name will be assigned an INTEGER affinity
                 if (dataType == "timestamp")
+                {
                     dataType = "blob";
-                
+                }
+
                 //else if (dataType == "datetime" || dataType == "smalldatetime" || 
                 //         dataType == "date" || dataType == "datetime2" || dataType == "time")
                 //{
@@ -1089,16 +1100,20 @@ public class SqlServerToSQLite
 
                 colDefault = FixDefaultValueString(colDefault);
 
-                ColumnSchema col = new ColumnSchema();
-                col.ColumnName = colName;
-                col.ColumnType = dataType;
-                col.Length = length;
-                col.IsNullable = isNullable;
-                col.IsIdentity = isIdentity;
-                col.DefaultValue = AdjustDefaultValue(colDefault);
+                ColumnSchema col = new()
+                {
+                    ColumnName = colName,
+                    ColumnType = dataType,
+                    Length = length,
+                    IsNullable = isNullable,
+                    IsIdentity = isIdentity,
+                    DefaultValue = AdjustDefaultValue(colDefault)
+                };
+
                 res.Columns.Add(col);
-            } // while
-        } // using
+
+            } 
+        } 
 
         // Find PRIMARY KEY information
         SqlCommand cmd2 = new SqlCommand(@"EXEC sp_pkeys '" + tableName + "'", conn);
@@ -1113,22 +1128,19 @@ public class SqlServerToSQLite
         } // using
 
         // Find COLLATE information for all columns in the table
-        SqlCommand cmd4 = new SqlCommand(
-            @"EXEC sp_tablecollations '" + tschma + "." + tableName + "'", conn);
+        SqlCommand cmd4 = new(@"EXEC sp_tablecollations '" + tschma + "." + tableName + "'", conn);
         using (SqlDataReader reader = cmd4.ExecuteReader())
         {
             while (reader.Read())
             {
                 bool? isCaseSensitive = null;
                 string colName = (string)reader["name"];
+
                 if (reader["tds_collation"] != DBNull.Value)
                 {
                     byte[] mask = (byte[])reader["tds_collation"];
-                    if ((mask[2] & 0x10) != 0)
-                        isCaseSensitive = false;
-                    else
-                        isCaseSensitive = true;
-                } // if
+                    isCaseSensitive = (mask[2] & 0x10) == 0;
+                } 
 
                 if (isCaseSensitive.HasValue)
                 {
@@ -1140,16 +1152,15 @@ public class SqlServerToSQLite
                             csc.IsCaseSensitivite = isCaseSensitive;
                             break;
                         }
-                    } // foreach
-                } // if
-            } // while
-        } // using
+                    } 
+                }
+            } 
+        } 
 
         try
         {
             // Find index information
-            SqlCommand cmd3 = new SqlCommand(
-                @"exec sp_helpindex '" + tschma + "." + tableName + "'", conn);
+            SqlCommand cmd3 = new($@"exec sp_helpindex '{tschma}.{tableName}'", conn);
             using (SqlDataReader reader = cmd3.ExecuteReader())
             {
                 res.Indexes = new List<IndexSchema>();
@@ -1165,13 +1176,13 @@ public class SqlServerToSQLite
 
                     IndexSchema index = BuildIndexSchema(indexName, desc, keys);
                     res.Indexes.Add(index);
-                } // while
+                } 
             } // using
         }
         catch (Exception ex)
         {
             _log.Warn("failed to read index information for table [" + tableName + "]");
-        } // catch
+        } 
 
         return res;
     }
@@ -1194,8 +1205,9 @@ public class SqlServerToSQLite
             dataType == "binary" || dataType == "smalldatetime" ||
             dataType == "smallmoney" || dataType == "money" ||
             dataType == "tinyint" || dataType == "uniqueidentifier" ||
-            dataType == "xml" || dataType == "sql_variant" || dataType == "datetime2" || dataType == "date" || dataType == "time" ||
-            dataType == "decimal" || dataType == "nchar" || dataType == "datetime")
+            dataType == "xml" || dataType == "sql_variant" || dataType == "datetime2" 
+                              || dataType == "date" || dataType == "time" 
+                              || dataType == "decimal" || dataType == "nchar" || dataType == "datetime")
             return;
         throw new ApplicationException("Validation failed for data type [" + dataType + "]");
     }
@@ -1220,7 +1232,7 @@ public class SqlServerToSQLite
                 first = i;
             if (res[i] == '\'' && first != -1 && i > last)
                 last = i;
-        } // for
+        } 
 
         if (first != -1 && last > first)
             return res.Substring(first, last - first + 1);
@@ -1234,10 +1246,8 @@ public class SqlServerToSQLite
                 replaced = true;
             }
         }
-        if (replaced)
-            return "(" + sb.ToString() + ")";
-        else
-            return sb.ToString();
+
+        return replaced ? $"({sb})" : sb.ToString();
     }
 
 
@@ -1251,39 +1261,48 @@ public class SqlServerToSQLite
     {
         ts.ForeignKeys = new List<ForeignKeySchema>();
 
-        SqlCommand cmd = new SqlCommand(
-            @"SELECT " +
-            @"  ColumnName = CU.COLUMN_NAME, " +
-            @"  ForeignTableName  = PK.TABLE_NAME, " +
-            @"  ForeignColumnName = PT.COLUMN_NAME, " +
-            @"  DeleteRule = C.DELETE_RULE, " +
-            @"  IsNullable = COL.IS_NULLABLE " +
-            @"FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C " +
-            @"INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK ON C.CONSTRAINT_NAME = FK.CONSTRAINT_NAME " +
-            @"INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME " +
-            @"INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU ON C.CONSTRAINT_NAME = CU.CONSTRAINT_NAME " +
-            @"INNER JOIN " +
-            @"  ( " +
-            @"    SELECT i1.TABLE_NAME, i2.COLUMN_NAME " +
-            @"    FROM  INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1 " +
-            @"    INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2 ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME " +
-            @"    WHERE i1.CONSTRAINT_TYPE = 'PRIMARY KEY' " +
-            @"  ) " +
-            @"PT ON PT.TABLE_NAME = PK.TABLE_NAME " +
-            @"INNER JOIN INFORMATION_SCHEMA.COLUMNS AS COL ON CU.COLUMN_NAME = COL.COLUMN_NAME AND FK.TABLE_NAME = COL.TABLE_NAME " +
-            @"WHERE FK.Table_NAME='" + ts.TableName + "'", conn);
+        var selectStatement = 
+            $"""
+            SELECT      ColumnName = CU.COLUMN_NAME,
+                       ForeignTableName = PK.TABLE_NAME,
+                       ForeignColumnName = PT.COLUMN_NAME,
+                       DeleteRule = C.DELETE_RULE,
+                       IsNullable = COL.IS_NULLABLE
+             FROM      INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS C
+            INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS FK
+               ON C.CONSTRAINT_NAME        = FK.CONSTRAINT_NAME
+            INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS PK
+               ON C.UNIQUE_CONSTRAINT_NAME = PK.CONSTRAINT_NAME
+            INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE CU
+               ON C.CONSTRAINT_NAME        = CU.CONSTRAINT_NAME
+            INNER JOIN (   SELECT      i1.TABLE_NAME,
+                                       i2.COLUMN_NAME
+                             FROM      INFORMATION_SCHEMA.TABLE_CONSTRAINTS i1
+                            INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE i2
+                               ON i1.CONSTRAINT_NAME = i2.CONSTRAINT_NAME
+                            WHERE      i1.CONSTRAINT_TYPE = 'PRIMARY KEY') PT
+               ON PT.TABLE_NAME            = PK.TABLE_NAME
+            INNER JOIN INFORMATION_SCHEMA.COLUMNS AS COL
+               ON CU.COLUMN_NAME           = COL.COLUMN_NAME
+              AND FK.TABLE_NAME            = COL.TABLE_NAME
+            WHERE      FK.TABLE_NAME = '{ts.TableName}';
+            """;
+
+        SqlCommand cmd = new(selectStatement, conn);
 
         using (SqlDataReader reader = cmd.ExecuteReader())
         {
             while (reader.Read())
             {
-                ForeignKeySchema fkc = new ForeignKeySchema();
-                fkc.ColumnName = (string)reader["ColumnName"];
-                fkc.ForeignTableName = (string)reader["ForeignTableName"];
-                fkc.ForeignColumnName = (string)reader["ForeignColumnName"];
-                fkc.CascadeOnDelete = (string)reader["DeleteRule"] == "CASCADE";
-                fkc.IsNullable = (string)reader["IsNullable"] == "YES";
-                fkc.TableName = ts.TableName;
+                ForeignKeySchema fkc = new()
+                {
+                    ColumnName = (string)reader["ColumnName"],
+                    ForeignTableName = (string)reader["ForeignTableName"],
+                    ForeignColumnName = (string)reader["ForeignColumnName"],
+                    CascadeOnDelete = (string)reader["DeleteRule"] == "CASCADE",
+                    IsNullable = (string)reader["IsNullable"] == "YES",
+                    TableName = ts.TableName
+                };
                 ts.ForeignKeys.Add(fkc);
             }
         }

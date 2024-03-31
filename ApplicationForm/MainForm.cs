@@ -54,8 +54,8 @@ namespace ApplicationForm
                 return;
             }
 
-            string fpath = saveFileDialog1.FileName;
-            txtSQLitePath.Text = fpath;
+            string filePath = saveFileDialog1.FileName;
+            txtSQLitePath.Text = filePath;
             pbrProgress.Value = 0;
             lblMessage.Text = string.Empty;
         }
@@ -65,50 +65,52 @@ namespace ApplicationForm
             UpdateSensitivity();
             pbrProgress.Value = 0;
             lblMessage.Text = string.Empty;
+
+            // KP Auto set and database name
+            if (!string.IsNullOrWhiteSpace(Utilities.DatabaseFolder()))
+            {
+
+                txtSQLitePath.Text = Path.Combine(Utilities.DatabaseFolder(), $"{cboDatabases.Text}.db");
+            }
+
         }
 
         private void btnSet_Click(object sender, EventArgs e)
         {
             try
             {
-                string constr;
-                if (cbxIntegrated.Checked)
-                {
-                    constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master");
-                }
-                else
-                {
-                    constr = GetSqlServerConnectionString(txtSqlAddress.Text, "master", txtUserDB.Text, txtPassDB.Text);
-                }
-                using (SqlConnection conn = new SqlConnection(constr))
+                var connectionString = cbxIntegrated.Checked ? 
+                    GetSqlServerConnectionString(txtSqlAddress.Text, "master") : 
+                    GetSqlServerConnectionString(txtSqlAddress.Text, "master", txtUserDB.Text, txtPassDB.Text);
+
+                using (SqlConnection conn = new(connectionString))
                 {
                     conn.Open();
 
                     // Get the names of all DBs in the database server.
-                    SqlCommand query = new SqlCommand(@"select distinct [name] from sysdatabases", conn);
+                    SqlCommand query = new(@"select distinct [name] from sysdatabases", conn);
+
                     using (SqlDataReader reader = query.ExecuteReader())
                     {
                         cboDatabases.Items.Clear();
+
                         while (reader.Read())
                             cboDatabases.Items.Add((string)reader[0]);
                         if (cboDatabases.Items.Count > 0)
                             cboDatabases.SelectedIndex = 0;
-                    } // using
-                } // using
+                    }
+                } 
 
                 cboDatabases.Enabled = true;
 
                 pbrProgress.Value = 0;
                 lblMessage.Text = string.Empty;
+
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this,
-                    ex.Message,
-                    "Failed To Connect",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            } // catch
+                MessageBox.Show(this, ex.Message, "Failed To Connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void txtSQLitePath_TextChanged(object sender, EventArgs e)
@@ -121,7 +123,7 @@ namespace ApplicationForm
             UpdateSensitivity();
 
             string version = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
-            this.Text = $"SQL Server To SQLite DB Converter ({version}) with Karen Payne mods";
+            Text = $"SQL Server To SQLite DB Converter ({version}) with Karen Payne mods";
         }
 
         private void txtSqlAddress_TextChanged(object sender, EventArgs e)
@@ -267,11 +269,14 @@ namespace ApplicationForm
         #region Private Methods
         private void UpdateSensitivity()
         {
-            if (txtSQLitePath.Text.Trim().Length > 0 && cboDatabases.Enabled &&
-                (!cbxEncrypt.Checked || txtPassword.Text.Trim().Length > 0))
+            if (txtSQLitePath.Text.Trim().Length > 0 && cboDatabases.Enabled && (!cbxEncrypt.Checked || txtPassword.Text.Trim().Length > 0))
+            {
                 btnStart.Enabled = true && !SqlServerToSQLite.IsActive;
+            }
             else
+            {
                 btnStart.Enabled = false;
+            }
 
             btnSet.Enabled = txtSqlAddress.Text.Trim().Length > 0 && !SqlServerToSQLite.IsActive;
             btnCancel.Visible = SqlServerToSQLite.IsActive;
@@ -290,14 +295,12 @@ namespace ApplicationForm
 
         private static string GetSqlServerConnectionString(string address, string? db)
         {
-            string res = @"Data Source=" + address.Trim() +
-                    ";Initial Catalog=" + db!.Trim() + ";Integrated Security=SSPI;";
+            string res = @"Data Source=" + address.Trim() + ";Initial Catalog=" + db!.Trim() + ";Integrated Security=SSPI;";
             return res;
         }
         private static string GetSqlServerConnectionString(string address, string? db, string user, string pass)
         {
-            string res = @"Data Source=" + address.Trim() +
-                ";Initial Catalog=" + db!.Trim() + ";User ID=" + user.Trim() + ";Password=" + pass.Trim();
+            string res = @"Data Source=" + address.Trim() + ";Initial Catalog=" + db!.Trim() + ";User ID=" + user.Trim() + ";Password=" + pass.Trim();
             return res;
         }
         #endregion

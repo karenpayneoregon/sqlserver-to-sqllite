@@ -352,9 +352,9 @@ public class SqlServerToSQLite
     /// <returns>A command object with the required functionality.</returns>
     private static SQLiteCommand BuildSQLiteInsert(TableSchema ts, bool treatGuidAsString)
     {
-        SQLiteCommand res = new SQLiteCommand();
+        SQLiteCommand res = new();
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new();
         sb.Append("INSERT INTO [" + ts.TableName + "] (");
         for (int i = 0; i < ts.Columns.Count; i++)
         {
@@ -370,7 +370,9 @@ public class SqlServerToSQLite
             string pname = "@" + GetNormalizedName(ts.Columns[i].ColumnName, pnames);
             sb.Append(pname);
             if (i < ts.Columns.Count - 1)
+            {
                 sb.Append(", ");
+            }
 
             DbType dbType = GetDbTypeOfColumn(ts.Columns[i], treatGuidAsString);
             SQLiteParameter prm = new SQLiteParameter(pname, dbType, ts.Columns[i].ColumnName);
@@ -398,15 +400,19 @@ public class SqlServerToSQLite
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < str.Length; i++)
         {
-            if (Char.IsLetterOrDigit(str[i]) || str[i] == '_')
+            if (char.IsLetterOrDigit(str[i]) || str[i] == '_')
+            {
                 sb.Append(str[i]);
+            }
             else
                 sb.Append("_");
-        } // for
+        } 
 
         // Avoid returning duplicate name
         if (names.Contains(sb.ToString()))
+        {
             return GetNormalizedName(sb.ToString() + "_", names);
+        }
         else
             return sb.ToString();
     }
@@ -439,8 +445,15 @@ public class SqlServerToSQLite
             return DbType.Binary;
         if (cs.ColumnType == "numeric")
             return DbType.Double;
+        if (cs.ColumnType == "time(7)")
+        {
+            return DbType.Time;
+        }
         if (cs.ColumnType == "timestamp" || cs.ColumnType == "datetime" || cs.ColumnType == "datetime2" || cs.ColumnType == "date" || cs.ColumnType == "time")
+        {
             return DbType.DateTime;
+        }
+
         if (cs.ColumnType == "nchar" || cs.ColumnType == "char")
             return DbType.String;
         if (cs.ColumnType == "uniqueidentifier" || cs.ColumnType == "guid")
@@ -860,7 +873,7 @@ public class SqlServerToSQLite
             List<string> tblschema = new List<string>();
 
             // This command will read the names of all tables in the database
-            SqlCommand cmd = new SqlCommand(@"select * from INFORMATION_SCHEMA.TABLES  where TABLE_TYPE = 'BASE TABLE'", conn);
+            SqlCommand cmd = new(@"select * from INFORMATION_SCHEMA.TABLES  where TABLE_TYPE = 'BASE TABLE'", conn);
             using (SqlDataReader reader = cmd.ExecuteReader())
             {
                 while (reader.Read())
@@ -902,8 +915,10 @@ public class SqlServerToSQLite
         {
             List<TableSchema> updated = selectionHandler(tables);
             if (updated != null)
+            {
                 tables = updated;
-        } // if
+            }
+        } 
 
         Regex removedbo = new Regex(@"dbo\.", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -975,24 +990,27 @@ public class SqlServerToSQLite
         res.TableName = tableName;
         res.TableSchemaName = tschma;
         res.Columns = new List<ColumnSchema>();
-        SqlCommand cmd = new SqlCommand(@"SELECT COLUMN_NAME,COLUMN_DEFAULT,IS_NULLABLE,DATA_TYPE, " +
-                                        @" (columnproperty(object_id(TABLE_NAME), COLUMN_NAME, 'IsIdentity')) AS [IDENT], " +
-                                        @"CHARACTER_MAXIMUM_LENGTH AS CSIZE " +
-                                        "FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tableName + "' ORDER BY " +
-                                        "ORDINAL_POSITION ASC", conn);
+
+        SqlCommand cmd = new($@"SELECT COLUMN_NAME,COLUMN_DEFAULT,IS_NULLABLE,DATA_TYPE,  (columnproperty(object_id(TABLE_NAME), COLUMN_NAME, 'IsIdentity')) AS [IDENT], CHARACTER_MAXIMUM_LENGTH AS CSIZE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}' ORDER BY ORDINAL_POSITION ASC", conn);
+
         using (SqlDataReader reader = cmd.ExecuteReader())
         {
             while (reader.Read())
             {
                 object tmp = reader["COLUMN_NAME"];
                 if (tmp is DBNull)
+                {
                     continue;
+                }
+
                 string colName = (string)reader["COLUMN_NAME"];
 
                 tmp = reader["COLUMN_DEFAULT"];
                 string colDefault;
                 if (tmp is DBNull)
+                {
                     colDefault = string.Empty;
+                }
                 else
                     colDefault = (string)tmp;
 
@@ -1000,8 +1018,12 @@ public class SqlServerToSQLite
                 bool isNullable = ((string)tmp == "YES");
                 string dataType = (string)reader["DATA_TYPE"];
                 bool isIdentity = false;
+
                 if (reader["IDENT"] != DBNull.Value)
+                {
                     isIdentity = ((int)reader["IDENT"]) == 1 ? true : false;
+                }
+
                 int length = reader["CSIZE"] != DBNull.Value ? Convert.ToInt32(reader["CSIZE"]) : 0;
 
                 ValidateDataType(dataType);
@@ -1012,8 +1034,27 @@ public class SqlServerToSQLite
                 // 'int' in its type name will be assigned an INTEGER affinity
                 if (dataType == "timestamp")
                     dataType = "blob";
-                else if (dataType == "datetime" || dataType == "smalldatetime" || dataType == "date" || dataType == "datetime2" || dataType == "time")
+                
+                //else if (dataType == "datetime" || dataType == "smalldatetime" || 
+                //         dataType == "date" || dataType == "datetime2" || dataType == "time")
+                //{
+                //    dataType = "datetime";
+                //}
+
+
+                /*
+                 * KP: Original Code above cast time to datetime which is wrong
+                 */
+                else if (dataType == "datetime" || dataType == "smalldatetime" ||
+                         dataType == "date" || dataType == "datetime2" )
+                {
                     dataType = "datetime";
+                }
+                else if (dataType == "time")
+                {
+                    dataType = "text";
+                }
+
                 else if (dataType == "decimal")
                     dataType = "numeric";
                 else if (dataType == "money" || dataType == "smallmoney")

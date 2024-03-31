@@ -2,6 +2,23 @@
 
 Clone the [repository](https://github.com/xmikedanielsx/MSSQLToSQLite) and made modifications
 
+Default location to save databases, replace TODO with your default location to save databases too.
+
+appsettings.json
+
+```json
+{
+  "ApplicationSettings": {
+    "DatabaseFolder": "TODO"
+  } 
+}
+```
+
+## Issues
+
+- Error out on one table with column type time(7)
+
+
 ## ***<u>Introduction</u>***
 I needed to convert the existing SQL server databases to SQLite databases as part of a DB migration program and did not find any decent free converter to do the job.
 

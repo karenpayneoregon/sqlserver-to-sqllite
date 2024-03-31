@@ -2,6 +2,9 @@ using System.Reflection;
 using System.Data.SqlClient;
 using ClassLibrary;
 using MethodInvoker = System.Windows.Forms.MethodInvoker;
+using System.Windows.Forms;
+using ApplicationForm.Classes;
+
 #pragma warning disable IDE1006
 
 namespace ApplicationForm
@@ -31,14 +34,25 @@ namespace ApplicationForm
         {
             txtSqlAddress.Text = toolStripMenuItemSqlServer.Text;
         }
+
         #endregion
 
         #region Event Handler
         private void btnBrowseSQLitePath_Click(object sender, EventArgs e)
         {
+
+            var folderName = Utilities.DatabaseFolder();
+
+            if (Directory.Exists(folderName))
+            {
+                saveFileDialog1.InitialDirectory = folderName;
+            }
+
             DialogResult res = saveFileDialog1.ShowDialog(this);
             if (res == DialogResult.Cancel)
+            {
                 return;
+            }
 
             string fpath = saveFileDialog1.FileName;
             txtSQLitePath.Text = fpath;
@@ -107,7 +121,7 @@ namespace ApplicationForm
             UpdateSensitivity();
 
             string version = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
-            this.Text = "SQL Server To SQLite DB Converter (" + version + ")";
+            this.Text = $"SQL Server To SQLite DB Converter ({version}) with Karen Payne mods";
         }
 
         private void txtSqlAddress_TextChanged(object sender, EventArgs e)
@@ -162,9 +176,8 @@ namespace ApplicationForm
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            string sqlConnString;
-            sqlConnString = cbxIntegrated.Checked ? GetSqlServerConnectionString(txtSqlAddress.Text, 
-                cboDatabases.SelectedItem as string) : 
+            var sqlConnString = cbxIntegrated.Checked ? GetSqlServerConnectionString(txtSqlAddress.Text, 
+                    cboDatabases.SelectedItem as string) : 
                 GetSqlServerConnectionString(txtSqlAddress.Text, 
                     cboDatabases.SelectedItem as string, txtUserDB.Text, txtPassDB.Text);
 
@@ -197,11 +210,7 @@ namespace ApplicationForm
                         {
                             if (!_shouldExit)
                             {
-                                MessageBox.Show(this,
-                                    msg,
-                                    "Conversion Failed",
-                                    MessageBoxButtons.OK,
-                                    MessageBoxIcon.Error);
+                                MessageBox.Show(this, msg, "Conversion Failed", MessageBoxButtons.OK, MessageBoxIcon.Error); 
                                 pbrProgress.Value = 0;
                                 lblMessage.Text = string.Empty;
                             }
@@ -219,7 +228,7 @@ namespace ApplicationForm
                 {
                     // Allow the user to select which tables to include by showing him the 
                     // table selection dialog.
-                    TableSelectionDialog dlg = new TableSelectionDialog();
+                    TableSelectionDialog dlg = new();
                     DialogResult res = dlg.ShowTables(schema, this);
                     if (res == DialogResult.OK)
                     {
@@ -234,17 +243,10 @@ namespace ApplicationForm
                 string updated = null!;
                 Invoke(new MethodInvoker(delegate
                 {
-                    ViewFailureDialog dlg = new ViewFailureDialog();
+                    ViewFailureDialog dlg = new();
                     dlg.View = vs;
                     DialogResult res = dlg.ShowDialog(this);
-                    if (res == DialogResult.OK)
-                    {
-                        updated = dlg.ViewSQL;
-                    }
-                    else
-                    {
-                        updated = null!;
-                    }
+                    updated = res == DialogResult.OK ? dlg.ViewSQL : null!;
                 }));
 
                 return updated!;
